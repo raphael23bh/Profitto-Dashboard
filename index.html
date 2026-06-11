@@ -4882,16 +4882,20 @@ function renderPresIndList() {
   const filtered = procF === 'ALL' ? DATA : DATA.filter(d => d.processo === procF);
   list.innerHTML = filtered.map(row => {
     const checked = presState.selectedIds.has(row.id);
+    const hasData = Object.keys(row.values||{}).some(m => row.values[m] !== null && row.values[m] !== '');
     const hiddenBadge = row.presHidden
-      ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--danger-dim);color:var(--danger);margin-left:6px;letter-spacing:.04em">oculto padrão</span>`
+      ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--danger-dim);color:var(--danger);margin-left:6px;letter-spacing:.04em">oculto padr\u00e3o</span>`
       : '';
-    return `<div class="pres-ind-row">
+    const noDataBadge = !hasData
+      ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--neutral-dim);color:var(--text-dim);margin-left:6px;letter-spacing:.04em">sem dados</span>`
+      : '';
+    return `<div class="pres-ind-row" style="${!hasData ? 'opacity:.45;' : ''}">
       <div class="pres-ind-cb ${checked?'checked':''}" onclick="togglePresInd(${row.id},this)">
-        ${checked ? '✓' : ''}
+        ${checked ? '\u2713' : ''}
       </div>
       <div class="pres-ind-info">
-        <div class="pres-ind-name">${row.indicador}${hiddenBadge}</div>
-        <div class="pres-ind-meta">${row.processo} · ${row.resp}</div>
+        <div class="pres-ind-name">${row.indicador}${hiddenBadge}${noDataBadge}</div>
+        <div class="pres-ind-meta">${row.processo} \u00b7 ${row.resp}</div>
       </div>
     </div>`;
   }).join('');
@@ -4961,7 +4965,7 @@ function buildPresQueue() {
     pool = pool.filter(d => !d.presHidden);
   }
   // Only show indicators that have at least some data
-  pool = pool.filter(d => Object.keys(d.values||{}).length > 0 || true); // show all, even empty
+  pool = pool.filter(d => Object.keys(d.values||{}).some(m => d.values[m] !== null && d.values[m] !== ''));
 
   if (pool.length === 0) {
     showToast('Nenhum indicador para apresentar com a configuração atual.', 'error');
